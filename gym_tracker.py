@@ -1,6 +1,6 @@
 # gym_tracker.py - ULTIMATE PERSONAL VERSION
 # Hani's Personal Gym Tracker with AI Suggestions & Progress Analytics
-# Birthday Gift with Love from Your Babe 💝
+# Birthday Gift with Love from M.S. 💝
 
 import streamlit as st
 import pandas as pd
