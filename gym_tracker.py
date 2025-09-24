@@ -183,10 +183,10 @@ PROTEIN_SHAKES = {
 }
 
 # Initialize session state
-if 'user_email' not in st.session_state:
-    st.session_state.user_email = None
 if 'authenticated' not in st.session_state:
     st.session_state.authenticated = False
+if 'user_name' not in st.session_state:
+    st.session_state.user_name = ""
 if 'user_stats' not in st.session_state:
     st.session_state.user_stats = {}
 if 'weight_unit' not in st.session_state:
@@ -388,37 +388,28 @@ def get_protein_recommendation(workout_type, intensity):
     else:
         return random.choice(list(PROTEIN_SHAKES.values()))
 
-# Sidebar for user authentication
+# Simplified authentication for public access
 with st.sidebar:
     st.title("🎁 Welcome, Hani!")
     st.image("https://img.icons8.com/color/96/000000/dumbbell.png", width=100)
     
-    if not st.session_state.authenticated:
-        st.subheader("🎂 Birthday Setup")
-        user_email = st.text_input("Enter your email to begin, babe:", placeholder="hani@example.com")
-        
-        if st.button("Start Your Fitness Journey!"):
-            if user_email and "@" in user_email:
-                st.session_state.user_email = user_email
-                st.session_state.authenticated = True
-                st.session_state.user_hash = hash_email(user_email)
-                st.rerun()
-            else:
-                st.error("Please enter a valid email address, babe!")
-    else:
-        st.success(f"Welcome back, {st.session_state.user_email.split('@')[0]}!")
+    # Simple name input instead of email authentication
+    user_name = st.text_input("Enter your name to begin:", placeholder="Hani")
+    
+    if user_name:
+        st.session_state.authenticated = True
+        st.session_state.user_name = user_name
+        st.success(f"Welcome, {user_name}!")
         
         # Weight unit selection
         st.subheader("⚖️ Weight Units")
-        weight_unit = st.radio("Select weight unit:", ["kg", "lb"], index=0 if st.session_state.weight_unit == "kg" else 1)
-        if weight_unit != st.session_state.weight_unit:
+        weight_unit = st.radio("Select weight unit:", ["kg", "lb"], index=0 if st.session_state.get('weight_unit', 'kg') == 'kg' else 1)
+        if weight_unit != st.session_state.get('weight_unit', 'kg'):
             st.session_state.weight_unit = weight_unit
             st.rerun()
-        
-        if st.button("Logout"):
-            st.session_state.authenticated = False
-            st.session_state.user_email = None
-            st.rerun()
+    else:
+        st.session_state.authenticated = False
+        st.info("Enter your name to start tracking!")
 
 # Main app content
 if st.session_state.authenticated:
@@ -430,7 +421,7 @@ if st.session_state.authenticated:
     st.write(f"**{subheader}**")
     
     # User stats setup (first time only)
-    user_stats_file = f"user_stats_{st.session_state.user_hash}.csv"
+    user_stats_file = f"user_stats_{st.session_state.user_name}.csv"
     try:
         user_stats_df = pd.read_csv(user_stats_file)
         if not user_stats_df.empty:
@@ -512,22 +503,8 @@ if st.session_state.authenticated:
     with st.expander("📱 Get Mobile QR Code"):
         st.write("Scan this QR code to open the app on your phone anytime, babe!")
         
-        # Get the current app URL (will be automatically detected on Streamlit Cloud)
-        try:
-            # Try to get the actual deployed URL
-            import requests
-            from streamlit import runtime
-            runtime_exists = runtime.exists()
-            
-            if runtime_exists:
-                # This will work on Streamlit Cloud
-                app_url = st.secrets.get("APP_URL", "https://hani-gym-tracker.streamlit.app")
-            else:
-                # Local development
-                app_url = "https://hani-gym-tracker.streamlit.app"
-        except:
-            # Fallback URL
-            app_url = "https://hani-gym-tracker.streamlit.app"
+        # Use the actual Streamlit Cloud URL
+        app_url = "https://hani-gym-miladshaan.streamlit.app/"
         
         qr_image = generate_qr_code(app_url)
         if qr_image:
@@ -578,7 +555,7 @@ if st.session_state.authenticated:
                 else:
                     # Save workout
                     today = datetime.date.today()
-                    user_filename = f"gym_progress_{st.session_state.user_hash}.csv"
+                    user_filename = f"gym_progress_{st.session_state.user_name}.csv"
                     
                     new_entry = {
                         "Date": today,
@@ -641,7 +618,7 @@ if st.session_state.authenticated:
         st.header("Your Progress Dashboard")
         
         try:
-            user_filename = f"gym_progress_{st.session_state.user_hash}.csv"
+            user_filename = f"gym_progress_{st.session_state.user_name}.csv"
             progress_df = pd.read_csv(user_filename)
             progress_df['Date'] = pd.to_datetime(progress_df['Date'])
             
@@ -684,7 +661,7 @@ if st.session_state.authenticated:
         st.header("Progress Insights & Analytics")
         
         try:
-            user_filename = f"gym_progress_{st.session_state.user_hash}.csv"
+            user_filename = f"gym_progress_{st.session_state.user_name}.csv"
             user_data = pd.read_csv(user_filename)
             user_data['Date'] = pd.to_datetime(user_data['Date'])
             
@@ -757,7 +734,7 @@ else:
         ✅ **Access anywhere** via QR code
         ✅ **Celebrate every PR** with special messages
         
-        **To begin, enter your email in the sidebar, babe!**
+        **To begin, enter your name in the sidebar, babe!**
         """)
     
     with col2:
